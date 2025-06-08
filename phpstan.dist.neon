@@ -1,0 +1,10 @@
+parameters:
+    level: 8
+    paths:
+        - bin/
+        - config/
+        - public/
+        - src/
+
+    ignoreErrors:
+            - '#Property App\\Domain\\Entity\\Product::\$id is never written, only read#'

@@ -1,0 +1,24 @@
+parameters:
+    dsn: 'amqp://%env(RABBITMQ_USER)%:%env(RABBITMQ_PASSWORD)%@%env(RABBITMQ_HOST)%:%env(RABBITMQ_PORT)%/%2f'
+
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+             async:
+                 dsn: '%dsn%/async'
+                 options:
+                     connect_timeout: 5
+                 retry_strategy:
+                     max_retries: 3
+                     delay: 1000
+             failed:
+                 dsn: '%dsn%/failed'
+                 options:
+                     connect_timeout: 5
+                     queues:
+                         failed:
+                             arguments:
+                                 x-message-ttl: 86400000
+             sync: 'sync://'

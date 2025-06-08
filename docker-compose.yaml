@@ -1,0 +1,62 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: default
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: mysql -u"$$MYSQL_USER" -p"$$MYSQL_PASSWORD" -e 'SELECT 1' || exit 1
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: default
+      RABBITMQ_DEFAULT_PASS: secret
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+    expose:
+      - "9000"
+    command: ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+    volumes:
+      - .:/app
+      - .docker/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/app
+      - ./.docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+volumes:
+  mysql_data:

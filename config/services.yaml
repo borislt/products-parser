@@ -1,0 +1,21 @@
+parameters:
+    csv_export_path: '%kernel.project_dir%/export'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+
+    Symfony\Component\DomCrawler\Crawler: ~
+
+    App\UI\Command\ScrapeProductsCommand:
+        arguments:
+            $productCategoryUrl: '%env(PRODUCT_CATEGORY_URL)%'
+            $csvExportPath: '%csv_export_path%'
+
+    App\Application\Command\ExportProductsToCsvHandler:
+        arguments:
+            $csvExportPath: '%csv_export_path%'
